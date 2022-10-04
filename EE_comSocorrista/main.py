@@ -64,7 +64,7 @@ def main():
     explorador.deliberate()
     while explorador.deliberate() != -1:
         model.draw()
-        #time.sleep(0.3) # para dar tempo de visualizar as movimentacoes do agente no labirinto
+        time.sleep(0.1) # para dar tempo de visualizar as movimentacoes do agente no labirinto
     model.draw()    
     
     # pegando as vitimas:
@@ -90,7 +90,7 @@ def main():
     
     for movDirection, state in explorador.plan.visited:
         visited.append(state) # State(y, x)
-        print(state)
+        #print(state)
 
     for victim in victims:
         state = State(victim[0][0], victim[0][1])
@@ -103,7 +103,7 @@ def main():
     # A*  // Feito
     # Matriz de distancias entre vitimas // Feito
     # Algoritmo genético / busca local caixeiro viajante // Feito
-    # Executar caminho // Tentando
+    # Executar caminho // Feito
 
     socorrista = AgentScrt(model, configDict, base, victims, visited)
 
@@ -111,7 +111,7 @@ def main():
     socorrista.deliberate()
     while socorrista.deliberate() != -1:
         model.draw()
-        time.sleep(0.3) # para dar tempo de visualizar as movimentacoes do agente no labirinto
+        time.sleep(0.1) # para dar tempo de visualizar as movimentacoes do agente no labirinto
     model.draw()  
 
 

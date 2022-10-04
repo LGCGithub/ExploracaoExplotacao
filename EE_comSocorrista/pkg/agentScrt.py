@@ -88,6 +88,7 @@ class AgentScrt:
     def deliberate(self):
         self.walls = self.plan.walls
         ## Verifica se há algum plano a ser executado
+
         if len(self.libPlan) == 0:
             return -1   ## fim da execucao do agente, acabaram os planos
         
@@ -100,6 +101,12 @@ class AgentScrt:
         self.currentState = self.positionSensor()
         self.plan.updateCurrentState(self.currentState) # atualiza o current state no plano
         print("Ag cre que esta em: ", self.currentState)
+
+        for victim in self.victims:
+            victimCoord = victim[0]
+            coord = State(victimCoord[1], victimCoord[0])
+            if coord == self.currentState:
+                self.model.maze.board.listPlaces[victimCoord[1]][victimCoord[0]].color = (0, 0, 255)
 
         ## Verifica se a execução do acao do ciclo anterior funcionou ou nao
         if not (self.currentState == self.expectedState):
@@ -115,13 +122,18 @@ class AgentScrt:
 
         ## Verifica se atingiu o estado objetivo
         ## Poderia ser outra condição, como atingiu o custo máximo de operação
-        if self.prob.goalTest(self.currentState) and self.ts < self.maxT - 8:
+
+        if len(self.plan.moves) == 0:
             print("!!! Objetivo atingido !!!")
             del self.libPlan[0]  ## retira plano da biblioteca
+            return -1
 
         ## Define a proxima acao a ser executada
         ## currentAction eh uma tupla na forma: <direcao>, <state>
         result = self.plan.chooseAction()
+
+        
+
         print("Ag deliberou pela acao: ", result[0], " o estado resultado esperado é: ", result[1])
 
         ## Executa esse acao, atraves do metodo executeGo 

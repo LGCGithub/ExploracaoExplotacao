@@ -25,9 +25,10 @@ class ScrtPlan:
 
         nVictims = len(self.victims)
 
-        print("nVitimas")
-        print(nVictims)
-
+        #print("nVitimas")
+        #print(nVictims)
+        
+        # Calcula uma matriz de distâncias entre as vitimas, para evitar recalcular no futuro
         self.matrizDist = np.zeros((nVictims, nVictims))
         for y in range(0, nVictims):
             for x in range(0, nVictims):
@@ -39,18 +40,22 @@ class ScrtPlan:
                 # State(y, x)
                 self.matrizDist[y][x] = self.AEstrela(coord1, coord2)[0][1]
 
-        print("Matriz de distancias")
-        print(self.matrizDist)
+        #print("Matriz de distancias")
+        #print(self.matrizDist)
 
+        # Calcula um caminho a ser seguido para resgatar as vitimas
         solucao = self.calcularSolucao()
-        caminho = solucao[1]
+        caminho = solucao
 
         self.moves = []
         firstVictim = self.victims[caminho[0]][0]
         firstCoord = State(firstVictim[0], firstVictim[1])
 
+
+        # Cria a sequencia de ações que guia o agente do inicio até a primeira vitima
         self.criarPlano(self.goalPos, firstCoord)
         
+        # Cria a sequencia de ações que guia o agente entre as vitimas
         for v in range(1, len(caminho)):
             currentVictim = self.victims[caminho[v - 1]][0]
             currentCoord = State(currentVictim[0], currentVictim[1])
@@ -60,12 +65,18 @@ class ScrtPlan:
 
         lastVictim = self.victims[caminho[len(caminho) - 1]][0]
         lastCoord = State(lastVictim[0], lastVictim[1])
+
+        # Cria a sequencia de ações que guia o agente da ultima vitima até o inicio
         self.criarPlano(lastCoord, self.goalPos)
 
         
 
     
-    
+    # Algoritmo A*
+    # Recebe dois States(y,x): start -> target
+    # Retorna: current ("nó atual") e closed ("nós explorados")
+    # A partir de current.currentCostG temos o custo do caminho start -> target
+    # Usando closed podemos descobrir o caminho
     def AEstrela(self, start, target):
         open = []
         closed = []
@@ -158,11 +169,16 @@ class ScrtPlan:
         # Significa que não existe caminho entre a posição atual e o objetivo
         # Mapa mal feito
     
+    # Função responsável por calcular a ordem de visita das vitimas
+    # Retorna um caminho a ser seguido
+    # O caminho é um array de indices, representa a ordem de visita das vitimas.
+    # caminho = [0, 3, 6, 2, 1, 5, 4] por exemplo
+    # Qualquer melhoria do algoritmo dever ser aqui!
     def calcularSolucao(self):
         pop = []
 
         # Etapa: Inicialização
-        for i in range(0, 200): # 100 individuos na populacao
+        for i in range(0, 200): # 200 individuos na populacao
             cromossomo = np.zeros(len(self.victims))
             score = 0.0
             caminho = []
@@ -174,9 +190,11 @@ class ScrtPlan:
                     caminho.append(j)
                     score += self.victims[j][3]
                 
-            shuffle(caminho)
+            shuffle(caminho) # Embaralha o caminho ordenado, exemplo: [0, 1, 2, 3, 4] => [1, 3, 0, 2, 4]
 
-            # 2-opt search aqui? SIM
+            # 2-opt search, algoritmo de busca local no espaço de estados do problema do caixeiro viajante.
+            # Essencialmente tenta melhorar uma solução já calculada, desembaralhando caminhos entrelaçados e ineficientes.
+            # Uso 2-opt na solução criada aleatoriamente pelo shuffle
 
             def cost_change(cost_mat, n1, n2, n3, n4):
                 return cost_mat[n1][n3] + cost_mat[n2][n4] - cost_mat[n1][n2] - cost_mat[n3][n4]
@@ -205,11 +223,13 @@ class ScrtPlan:
             coord1 = State(victimX[0], victimX[1])
             coord2 = State(victimY[0], victimY[1])
 
+            # Calculo do custo do caminho
             custo_caminho += self.AEstrela(goalState, coord1)[0][1] # Caminho até a primeira vitima
             for j in range(1, len(caminho)): # Caminho entre as vitimas
                 custo_caminho += self.matrizDist[caminho[j - 1]][caminho[j]]
             custo_caminho += self.AEstrela(coord2, goalState)[0][1] # Caminho até a ultima vitima
 
+            # Cromossomo não é utilizado, por enquanto
             pop.append([cromossomo, caminho, score, custo_caminho])
 
         best = ([], [], 0.0, 0.0)
@@ -221,7 +241,7 @@ class ScrtPlan:
             if score > best[2] and custo < self.maxTime: # E se não tiver nenhum individuo? Resolver esse problema
                 best = ind
 
-        return best
+        return best[1] # Melhor caminho encontrado na população
 
     def updateCurrentState(self, state):
         self.currentState = state
@@ -232,18 +252,24 @@ class ScrtPlan:
         @return: tupla contendo a acao (direcao) e uma instância da classe State que representa a posição esperada após a execução
         """
 
-        ## Tenta encontrar um movimento possivel dentro do tabuleiro 
-        result = self.moves.pop() # Direcao e state esperado
+        ## Tenta encontrar um movimento possivel dentro do tabuleiro
+        if len(self.moves) != 0: 
+            result = self.moves.pop() # Direcao e state esperado
+        else: 
+            result = ("nop", State(-1, -1))
 
         return result
     
+    # Cria uma lista de ações com base em um start e um target (start -> target)
+    # As ações guiam o agente até o target
+    # Essencialmente transforma o caminho calculado no A* em algo para ser executado pelo agente
     def criarPlano(self, atual, next):
         
         #atual = self.goalPos
         #victim = self.victims[21][0]
         #victimCoord = State(victim[0], victim[1])
         victimCoord = next
-        print(atual, victimCoord)
+        #print(atual, victimCoord)
         current, closed = self.AEstrela(atual, victimCoord)
 
         currentState, currentCostG, currentCostH, currentParent = current
