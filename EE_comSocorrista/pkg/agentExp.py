@@ -128,13 +128,14 @@ class AgentExp:
         
         ## Verifica se tem vitima na posicao atual    
         victimId = self.victimPresenceSensor()
+        
         vtmFlag = 0
         for i in range(len(self.victims)):
             if self.victims[i][1] == victimId:
                 print(self.victims[i][1], victimId)
                 vtmFlag = 1
                 break
-
+        
         if victimId > 0:
             if vtmFlag == 0: # victim existis and is not in victims array
                 vitals = self.victimVitalSignalsSensor(victimId)

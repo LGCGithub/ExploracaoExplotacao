@@ -56,6 +56,7 @@ class ScrtPlan:
         self.criarPlano(self.goalPos, firstCoord)
         
         # Cria a sequencia de ações que guia o agente entre as vitimas
+
         for v in range(1, len(caminho)):
             currentVictim = self.victims[caminho[v - 1]][0]
             currentCoord = State(currentVictim[0], currentVictim[1])
